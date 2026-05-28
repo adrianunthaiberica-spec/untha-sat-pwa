@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0056b3">
+  <title>UNTHA SAT — Control Móvil</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    }
+
+    body {
+      background-color: #f4f6f9;
+      color: #333;
+      padding-bottom: 40px;
+    }
+
+    /* ── CABECERA ── */
+    header {
+      background-color: #0056b3;
+      color: white;
+      padding: 18px 15px;
+      text-align: center;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    header h1 { font-size: 18px; font-weight: bold; letter-spacing: 0.5px; }
+    header p  { font-size: 11px; color: #bcccf0; margin-top: 3px; }
+
+    /* ── LAYOUT ── */
+    .container {
+      width: 100%;
+      max-width: 500px;
+      margin: 0 auto;
+      padding: 15px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      margin-bottom: 15px;
+    }
+
+    /* ── FORMULARIO ── */
+    .form-group { margin-bottom: 16px; }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #444;
+      margin-bottom: 6px;
+    }
+
+    select, input {
+      width: 100%;
+      padding: 13px 12px;
+      font-size: 15px;
+      border: 1.5px solid #ccd4e0;
+      border-radius: 7px;
+      background-color: #fafbfc;
+      color: #333;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    select {
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%230056b3'><path d='M0 3h12L6 10z'/></svg>");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 36px;
+    }
+
+    select:focus, input:focus {
+      border-color: #0056b3;
+      background-color: #fff;
+      box-shadow: 0 0 0 3px rgba(0,86,179,0.1);
+    }
+
+    select:disabled {
+      background-color: #e9ecef;
+      color: #9aa0a6;
+      cursor: not-allowed;
+    }
+
+    .hidden { display: none !important; }
+
+    /* ── BOTÓN PRINCIPAL ── */
+    .btn {
+      background-color: #0056b3;
+      color: white;
+      border: none;
+      width: 100%;
+      padding: 15px;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      box-shadow: 0 4px 8px rgba(0,86,179,0.25);
+      margin-top: 4px;
+    }
+    .btn:hover   { background-color: #004085; }
+    .btn:active  { background-color: #002d62; transform: scale(0.99); }
+    .btn:disabled { background-color: #a0b4cc; cursor: not-allowed; box-shadow: none; }
+
+    .btn-secondary {
+      background-color: #6c757d;
+      box-shadow: none;
+      margin-top: 10px;
+    }
+    .btn-secondary:hover { background-color: #545b62; }
+
+    /* ── OVERLAY DE CARGA ── */
+    .loading-overlay {
+      background: rgba(255,255,255,0.92);
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      font-weight: bold;
+      color: #0056b3;
+      font-size: 16px;
+      gap: 12px;
+    }
+
+    .spinner {
+      width: 36px; height: 36px;
+      border: 4px solid #ccd4e0;
+      border-top-color: #0056b3;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── PANTALLA DE ÉXITO ── */
+    .modal-success {
+      background: white;
+      border-radius: 12px;
+      padding: 25px 20px;
+      text-align: center;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+      border-top: 6px solid #28a745;
+    }
+    .modal-success h2 { color: #28a745; font-size: 20px; margin-bottom: 10px; }
+    .modal-success p  { font-size: 14px; margin-bottom: 14px; line-height: 1.5; color: #555; }
+
+    .badge-id {
+      background: #0056b3;
+      color: white;
+      padding: 6px 14px;
+      border-radius: 14px;
+      font-family: monospace;
+      font-size: 13px;
+      display: inline-block;
+      margin-bottom: 16px;
+      word-break: break-all;
+    }
+
+    .link-box {
+      background: #f0fdf4;
+      border: 1.5px dashed #28a745;
+      padding: 12px;
+      border-radius: 7px;
+      font-size: 13px;
+      color: #166534;
+      word-break: break-all;
+      margin-bottom: 16px;
+      display: block;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .link-box:hover { background: #dcfce7; }
+
+    /* ── PANTALLA DE ERROR ── */
+    .modal-error {
+      background: white;
+      border-radius: 12px;
+      padding: 25px 20px;
+      text-align: center;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+      border-top: 6px solid #dc3545;
+    }
+    .modal-error h2 { color: #dc3545; font-size: 18px; margin-bottom: 10px; }
+    .modal-error p  { font-size: 14px; color: #555; margin-bottom: 14px; line-height: 1.5; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>UNTHA SAT Móvil</h1>
+    <p>Fase 1 — Alta de Asistencias en Planta</p>
+  </header>
+
+  <div class="container">
+
+    <!-- Overlay de carga (inicial y durante envío) -->
+    <div id="loader" class="loading-overlay">
+      <div class="spinner"></div>
+      <div id="loaderMsg">Sincronizando datos de UNTHA...</div>
+    </div>
+
+    <!-- ── FORMULARIO ── -->
+    <form id="satForm" class="card">
+
+      <div class="form-group">
+        <label for="cliente">Cliente</label>
+        <select id="cliente" required>
+          <option value="">— Selecciona un cliente —</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="modelo">Modelo de Máquina</label>
+        <select id="modelo" required disabled>
+          <option value="">— Primero elige un cliente —</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="serie">Número de Serie</label>
+        <select id="serie" required disabled>
+          <option value="">— Primero elige un modelo —</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="tipo">Tipo de Trabajo</label>
+        <select id="tipo" required onchange="evaluarTipo()">
+          <option value="">— Selecciona tipo —</option>
+          <option value="Remote">Remote</option>
+          <option value="On-site">On-site</option>
+          <option value="Visit">Visit</option>
+          <option value="Maintenance">Maintenance</option>
+          <option value="Commissioning">Commissioning</option>
+        </select>
+      </div>
+
+      <!-- Campo visible solo para Commissioning -->
+      <div id="grupoPais" class="form-group hidden">
+        <label for="paisCommissioning">🌍 País de Destino (ISO)</label>
+        <select id="paisCommissioning">
+          <option value="ES">España (ES)</option>
+          <option value="PE">Perú (PE)</option>
+          <option value="BR">Brasil (BR)</option>
+          <option value="MX">México (MX)</option>
+          <option value="CL">Chile (CL)</option>
+          <option value="AR">Argentina (AR)</option>
+          <option value="CO">Colombia (CO)</option>
+          <option value="DE">Alemania (DE)</option>
+          <option value="AT">Austria (AT)</option>
+          <option value="FR">Francia (FR)</option>
+          <option value="IT">Italia (IT)</option>
+          <option value="PL">Polonia (PL)</option>
+          <option value="RO">Rumanía (RO)</option>
+          <option value="UK">Reino Unido (UK)</option>
+          <option value="US">Estados Unidos (US)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="tecnico">Técnico Asignado</label>
+        <select id="tecnico" required>
+          <option value="">— Selecciona técnico —</option>
+          <option value="Adrian Couso">Adrian Couso</option>
+          <option value="Luis Silva">Luis Silva</option>
+          <option value="Riann Chaves">Riann Chaves</option>
+          <option value="Soporte Remoto">Soporte Remoto</option>
+        </select>
+      </div>
+
+      <button type="submit" id="btnEnviar" class="btn">
+        🔧 Crear Asistencia SAT
+      </button>
+
+    </form>
+
+    <!-- ── PANTALLA DE ÉXITO ── -->
+    <div id="successBox" class="modal-success hidden">
+      <h2>✅ ¡Asistencia Registrada!</h2>
+      <p>La asistencia ha sido creada correctamente en el sistema UNTHA SAT.</p>
+      <div class="badge-id" id="resId"></div>
+      <p><strong>Carpeta de trabajo en Drive:</strong></p>
+      <a id="resDrive" class="link-box" target="_blank" href="#">
+        📁 Abrir Carpeta de Drive
+      </a>
+      <button onclick="reiniciar()" class="btn btn-secondary">
+        ➕ Crear Otra Asistencia
+      </button>
+    </div>
+
+    <!-- ── PANTALLA DE ERROR ── -->
+    <div id="errorBox" class="modal-error hidden">
+      <h2>❌ Error al Crear Asistencia</h2>
+      <p id="errorMsg">Ha ocurrido un error inesperado.</p>
+      <button onclick="mostrarFormulario()" class="btn btn-secondary">
+        🔄 Volver e Intentar de Nuevo
+      </button>
+    </div>
+
+  </div><!-- /container -->
+
+  <script>
+    // ================================================================
+    // ⚠️ IMPORTANTE: Reemplaza esta URL con la de tu Web App publicada
+    // La obtienes en Apps Script → Implementar → Gestionar implementaciones
+    // ================================================================
+    const API_URL = "https://script.google.com/macros/s/AKfycbxSstlCm3uK94EOuzFURCw2-9U0Mf9FY-1PDGrrtKoqhh5YFVFQnzxVxWakHGqaxjXPPA/exec";
+
+    let baseDatos = [];
+
+    // ── Registro del Service Worker (PWA instalable) ──
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("sw.js")
+          .then(r => console.log("SW registrado:", r.scope))
+          .catch(e => console.warn("SW no registrado:", e));
+      });
+    }
+
+    // ── Al cargar la página: obtener datos de la Sheet ──
+    document.addEventListener("DOMContentLoaded", () => {
+      fetch(API_URL)
+        .then(res => {
+          if (!res.ok) throw new Error("Error HTTP: " + res.status);
+          return res.json();
+        })
+        .then(data => {
+          if (data.error) throw new Error(data.error);
+          baseDatos = data;
+          poblarClientes();
+          ocultarLoader();
+        })
+        .catch(err => {
+          ocultarLoader();
+          mostrarError("No se pudieron cargar los datos de UNTHA.\n\nComprueba que la URL de la Web App es correcta y que tienes conexión.\n\nDetalle: " + err.message);
+        });
+    });
+
+    // ── Poblar desplegable de clientes únicos ──
+    function poblarClientes() {
+      const sel     = document.getElementById("cliente");
+      const unicos  = [...new Set(baseDatos.map(r => r.cliente))].sort();
+      unicos.forEach(c => {
+        const opt       = document.createElement("option");
+        opt.value       = c;
+        opt.textContent = c;
+        sel.appendChild(opt);
+      });
+      sel.addEventListener("change", e => filtrarModelos(e.target.value));
+    }
+
+    // ── Filtrar modelos según cliente ──
+    function filtrarModelos(cliente) {
+      const selModelo = document.getElementById("modelo");
+      const selSerie  = document.getElementById("serie");
+
+      selModelo.innerHTML = '<option value="">— Selecciona un modelo —</option>';
+      selSerie.innerHTML  = '<option value="">— Primero elige un modelo —</option>';
+      selSerie.disabled   = true;
+
+      if (!cliente) { selModelo.disabled = true; return; }
+
+      const modelos = [...new Set(
+        baseDatos.filter(r => r.cliente === cliente).map(r => r.modelo)
+      )].sort();
+
+      modelos.forEach(m => {
+        if (!m) return;
+        const opt       = document.createElement("option");
+        opt.value       = m;
+        opt.textContent = m;
+        selModelo.appendChild(opt);
+      });
+
+      selModelo.disabled = false;
+      selModelo.onchange = e => filtrarSeries(cliente, e.target.value);
+    }
+
+    // ── Filtrar series según cliente + modelo ──
+    function filtrarSeries(cliente, modelo) {
+      const selSerie = document.getElementById("serie");
+      selSerie.innerHTML = '<option value="">— Selecciona serie —</option>';
+
+      if (!modelo) { selSerie.disabled = true; return; }
+
+      const series = [...new Set(
+        baseDatos
+          .filter(r => r.cliente === cliente && r.modelo === modelo)
+          .map(r => r.serie)
+      )].sort();
+
+      series.forEach(s => {
+        if (!s) return;
+        const opt       = document.createElement("option");
+        opt.value       = s;
+        opt.textContent = s;
+        selSerie.appendChild(opt);
+      });
+
+      selSerie.disabled = false;
+    }
+
+    // ── Mostrar/ocultar campo país para Commissioning ──
+    function evaluarTipo() {
+      const tipo  = document.getElementById("tipo").value;
+      const grupo = document.getElementById("grupoPais");
+      if (tipo.toLowerCase().includes("commissioning")) {
+        grupo.classList.remove("hidden");
+      } else {
+        grupo.classList.add("hidden");
+      }
+    }
+
+    // ── Envío del formulario ──
+    document.getElementById("satForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+
+      const cliente = document.getElementById("cliente").value;
+      const modelo  = document.getElementById("modelo").value;
+      const serie   = document.getElementById("serie").value;
+      const tipo    = document.getElementById("tipo").value;
+      const tecnico = document.getElementById("tecnico").value;
+      const pais    = document.getElementById("paisCommissioning").value;
+
+      // Validación extra en cliente antes de enviar
+      if (!cliente || !modelo || !serie || !tipo || !tecnico) {
+        mostrarError("Por favor, rellena todos los campos antes de continuar.");
+        return;
+      }
+
+      // Bloquear botón y mostrar loader
+      document.getElementById("btnEnviar").disabled = true;
+      mostrarLoader("Creando asistencia en UNTHA SAT...");
+
+      const payload = {
+        cliente:           cliente,
+        modelo:            modelo,
+        serie:             serie,
+        tipo:              tipo,
+        tecnico:           tecnico,
+        paisCommissioning: pais
+      };
+
+      // ✅ CORREGIDO: mode "cors" (no "no-cors") para poder leer la respuesta real
+      fetch(API_URL, {
+        method:  "POST",
+        mode:    "cors",
+        headers: { "Content-Type": "text/plain" }, // Apps Script requiere text/plain en POST
+        body:    JSON.stringify(payload)
+      })
+      .then(res => {
+        if (!res.ok) throw new Error("Error HTTP: " + res.status);
+        return res.json();
+      })
+      .then(data => {
+        ocultarLoader();
+        if (data.success) {
+          // ✅ Mostramos el ID y link REALES devueltos por el servidor
+          document.getElementById("resId").textContent    = data.id;
+          document.getElementById("resDrive").href        = data.driveUrl;
+          document.getElementById("resDrive").textContent = "📁 " + data.id;
+          document.getElementById("satForm").classList.add("hidden");
+          document.getElementById("successBox").classList.remove("hidden");
+        } else {
+          mostrarError("El servidor devolvió un error:\n" + (data.error || "Error desconocido."));
+          document.getElementById("btnEnviar").disabled = false;
+        }
+      })
+      .catch(err => {
+        ocultarLoader();
+        mostrarError("Error de conexión con la Web App.\n\nDetalle: " + err.message);
+        document.getElementById("btnEnviar").disabled = false;
+      });
+    });
+
+    // ── Reiniciar formulario tras éxito ──
+    function reiniciar() {
+      document.getElementById("satForm").reset();
+      document.getElementById("modelo").disabled = true;
+      document.getElementById("serie").disabled  = true;
+      document.getElementById("grupoPais").classList.add("hidden");
+      document.getElementById("successBox").classList.add("hidden");
+      document.getElementById("errorBox").classList.add("hidden");
+      document.getElementById("satForm").classList.remove("hidden");
+      document.getElementById("btnEnviar").disabled = false;
+    }
+
+    function mostrarFormulario() {
+      document.getElementById("errorBox").classList.add("hidden");
+      document.getElementById("satForm").classList.remove("hidden");
+      document.getElementById("btnEnviar").disabled = false;
+    }
+
+    // ── Helpers de UI ──
+    function mostrarLoader(msg) {
+      document.getElementById("loaderMsg").textContent = msg || "Cargando...";
+      document.getElementById("loader").classList.remove("hidden");
+    }
+
+    function ocultarLoader() {
+      document.getElementById("loader").classList.add("hidden");
+    }
+
+    function mostrarError(msg) {
+      document.getElementById("errorMsg").textContent = msg;
+      document.getElementById("satForm").classList.add("hidden");
+      document.getElementById("errorBox").classList.remove("hidden");
+    }
+  </script>
+
+</body>
+</html>
